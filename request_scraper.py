@@ -1,3 +1,5 @@
+import matlab.engine
+import numpy as np
 from Tkinter import *
 import tkFileDialog
 import openpyxl
@@ -9,21 +11,25 @@ class GUI(object):
     def __init__(self):
         self.root = Tk()
 
-        #use .get() to retrieve values for these:
+        #main variables
         self.request_filepath = StringVar()
         self.ts_count_var = StringVar()
         self.plot_count_var = StringVar()
 
+        #request variables
+        self.request_doc = None
+
+        #touchstone variables
         self.ts_paths = []
         self.ts_entry_boxes = []
         self.ts_port_maps = []
         self.ts_transforms = []
+        self.ts_manager = None #self.ts_manager.db[0][1][0] ====> DB, TSfile 0, S21
 
+        #plot variables
         self.p_bode_domain = []
-        self.plot_ts_choices = list(list()) #[plt][ts]
-
-        self.request_doc = None
-        self.touchstone_manager = None
+        self.plot_ts_choices = list(list()) #[plt][ts] ====> 0 or 1
+        self.plot_param_choices = []
 
     def askopenfile_rq(self):
         a = tkFileDialog.askopenfilename()
@@ -39,7 +45,7 @@ class GUI(object):
         print str(self.request_filepath.get())
 
     def third_window(self):
-        self.touchstone_manager = TouchstoneManager(self.ts_paths)
+        self.ts_manager = TouchstoneManager(self.ts_paths, self.ts_port_maps)
         window3 = Toplevel()
         Label(window3, text="Plot Options").grid(row=0, column=0)
         Label(window3, text="Mag").grid(row=0, column=1)
@@ -59,6 +65,11 @@ class GUI(object):
             Radiobutton(window3, text="Phase", value=1, variable=self.p_bode_domain[plt_i]).grid(row=plt_i+1, column=2)
             for ts_i in range(int(self.ts_count_var.get())):
                 Checkbutton(window3, variable=self.plot_ts_choices[plt_i][ts_i]).grid(row=1+plt_i, column=3+ts_i)
+            parameters = ["S11", "S12", "S21", "S22"]
+            self.plot_param_choices.append(IntVar())
+            for p in range(len(parameters)):
+                Radiobutton(window3, text=parameters[p], value=p, variable=self.plot_param_choices[-1]).grid(
+                        row=plt_i+1, column=3+int(self.ts_count_var.get())+p)
         Button(window3, text='Ok', command=self.close_gui).grid(row=int(self.plot_count_var.get())+1,
                                                                 column=int(self.ts_count_var.get()))
 
@@ -68,7 +79,7 @@ class GUI(object):
         Label(window2, text="Choose").grid(row=0, column=0)
         Label(window2, text="Touchstone Files").grid(row=0, column=2)
         Label(window2, text="Port Map").grid(row=0, column=3)
-        Label(window2, text="S2SDD").grid(row=0, column=5)
+        #Label(window2, text="S2SDD").grid(row=0, column=5)
         window2_labels, ts_browse_buttons = [], []
         self.ts_paths, self.ts_entry_boxes, self.ts_port_maps, self.ts_transforms = [], [], [], []
         for i in xrange(int(self.ts_count_var.get())):
@@ -79,9 +90,9 @@ class GUI(object):
             self.ts_entry_boxes.append(Entry(window2, textvariable=self.ts_paths[i]).grid(row=i+1, column=2))
             self.ts_port_maps.append(IntVar())
             self.ts_transforms.append(IntVar())
-            Radiobutton(window2, text="12-34", value=0, variable=self.ts_port_maps[i]).grid(row=i+1, column=3)
-            Radiobutton(window2, text="13-24", value=1, variable=self.ts_port_maps[i]).grid(row=i+1, column=4)
-            Checkbutton(window2, variable=self.ts_transforms[i]).grid(row=i+1, column=5)
+            Radiobutton(window2, text="13 to 24", value=0, variable=self.ts_port_maps[i]).grid(row=i+1, column=3)
+            Radiobutton(window2, text="12 to 34", value=1, variable=self.ts_port_maps[i]).grid(row=i+1, column=4)
+            #Checkbutton(window2, variable=self.ts_transforms[i]).grid(row=i+1, column=5)
         Button(window2, text='Ok', command=self.third_window).grid(row=int(self.ts_count_var.get())+1, column=4)
 
     def first_window(self):
@@ -156,26 +167,55 @@ class RequestDoc(object):
             return_table.append(table_line)
         return return_table
 
+
 class TouchstoneManager(object):
-    def __init__(self, ts_paths):
-        self.ts_paths = ts_paths
-        self.ntwks=[]
-        for ts_p in self.ts_paths:
-            self.ntwks.append(rf.Network(ts_p))
-        print self.ts_paths
-        print self.ntwks
-        for n in self.ntwks:
-            n.plot_s_smith()
+    ## TouchstoneManager
+    #  Access like this:
+    # tsm = TouchstronManager(["Filepath1","Filepath2",...], port_maps)
+    # tsm.db[5][0][1]
+    # This command retrieves the following:
+    # - dB
+    # - Touchstone File # 6
+    # - parameter S12
+    def __init__(self, ts_paths, port_maps):
+        self.pm = port_maps
+        self.db, self.deg, self.ghz = [], [], []
+        self.eng = matlab.engine.start_matlab()
+        for ts_p in range(len(ts_paths)):
+            dbX_params = []
+            degX_params = []
+            ghzX_params = []
+            for X in range(1, 3):
+                dbY_params = []
+                degY_params = []
+                ghzY_params = []
+                for Y in range(1, 3):
+                    filename = str(ts_paths[ts_p].get())
+                    self.eng.eval("touchstone_filename = '"+filename+"';", nargout=0)
+                    self.eng.eval("s_obj = sparameters(touchstone_filename);", nargout=0)
+                    self.eng.eval("ghz = s_obj.Frequencies./1e9;", nargout=0)
+                    self.eng.eval("s_raw = s2sdd(s_obj.Parameters,"+str(self.pm[ts_p].get()+1)+");", nargout=0)
+                    self.eng.eval("s_plot = squeeze(s_raw("+str(X)+","+str(Y)+",:));", nargout=0)
+                    self.eng.eval("y_db = 20 * log10(abs(s_plot));", nargout=0)
+                    self.eng.eval("y_deg = (180./pi).*(angle(s_plot));", nargout=0)
+                    db = np.array(self.eng.workspace['y_db']).T[0]
+                    deg = np.array(self.eng.workspace['y_deg']).T[0]
+                    ghz = np.array(self.eng.workspace['ghz']).T[0]
+                    dbY_params.append(db)
+                    degY_params.append(deg)
+                    ghzY_params.append(ghz)
+                dbX_params.append(dbY_params)
+                degX_params.append(degY_params)
+                ghzX_params.append(ghzY_params)
+            self.db.append(dbX_params)
+            self.deg.append(degX_params)
+            self.ghz.append(ghzX_params)
+        self.eng.quit()
+        return
 
-
-
-
+s2pfile = 'C:/Users/Administrator/Desktop/DATA_CHANNELA_DQ0_AB1.s2p'
+s4pfile = 'C:/Users/Administrator/PycharmProjects/VNAReportGenreator/A0_B0/SI-489-1_SURFACE_PCIE0_LANE1_C1_P1-2-3_Sdd1-2.s4p'
 
 
 g = GUI()
 g.run()
-
-
-#r = RequestScraper('C:/Users/Administrator/PycharmProjects/VNAReportGenreator/request.xlsx')
-#r.scrape_table_boundaries()
-#r.scrape_tables()
