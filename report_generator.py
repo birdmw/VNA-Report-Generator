@@ -11,6 +11,8 @@ import pandas as pd
 import docxtpl
 import glob
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 from docx.shared import Inches
@@ -63,10 +65,12 @@ class Generator(object):
                 self.set_ts_port_maps()
             else:
                 print "guide.csv not found, generating one instead"
+
                 self.generate_guide()
                 self.df_guide.to_csv('guide.csv')
                 self.df_guide = pd.read_csv(file_path)
                 self.set_ts_port_maps()
+
 
     def generate_guide(self):
         self.get_s4p_paths()
@@ -298,7 +302,8 @@ def main():
         g.s4p_dir = sys.argv[sys.argv.index('d')+1] \
             if ('d' in sys.argv and sys.argv.index('d') != len(sys.argv)-1) else os.getcwd()
         g.figure_string = sys.argv[sys.argv.index('p')+1] \
-            if ('p' in sys.argv and sys.argv.index('p') != len(sys.argv)-1) else "s11_m,s12_m,s21_m,s22_m"
+            if ('p' in sys.argv and sys.argv.index('p') != len(sys.argv)-1) else "s11_m,s11_p,s21_m,s21_p"
+        print g.figure_string
         g.read_from_paths()
         g.write_from_data()
 

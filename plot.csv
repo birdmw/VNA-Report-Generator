@@ -1,7 +1,0 @@
-,title,magphase,s4p_0,s4p_1,s4p_2,s4p_3,s4p_4,s4p_5
-paths,,,C:\ms\SI-489-1_SURFACE_PCIE0_LANE1_C1_P1-2-3_Sdd1-2.s4p,C:\ms\SI-489-2_SURFACE_PCIE0_LANE2_C2_P2-3_Sdd1-1.s4p,C:\ms\SI-489-3_SURFACE_PCIE0_LANE3_C3_P2_Sdd2-2.s4p,C:\ms\SI-489-4_SURFACE_PCIE0_LANE4_C3_P1_Sdd2-2.s4p,C:\ms\SI-489-5_SURFACE_PCIE0_LANE5_C5_P4_Sdd1-2.s4p,C:\ms\SI-489-6_SURFACE_PCIE0_LANE6_C4_P2_Sdd1-4.s4p
-portmap,,,13_24,13_24,13_24,13_24,13_24,13_24
-plot_0,,m,s11,s11,s11,s11,s11,s11
-plot_1,,m,s12,s12,s12,s12,s12,s12
-plot_2,,m,s21,s21,s21,s21,s21,s21
-plot_3,,m,s22,s22,s22,s22,s22,s22
