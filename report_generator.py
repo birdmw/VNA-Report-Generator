@@ -90,9 +90,10 @@ class Generator(object):
         df_portmap = pd.DataFrame([port_map], columns=col_names)
         self.df_guide = self.df_guide.append(df_portmap)
         for i_pl in range(len(figures)):
-            s = ["plot_"+str(i_pl), "plot_"+str(i_pl), self.figures[i_pl][1]]
+            s = ["plot_"+str(i_pl), "plot_"+str(i_pl), self.figures[i_pl][0]]
             for _ in self.s4p_paths:
-                s.append(self.figures[i_pl][0])
+                #print self.figures[i_pl]
+                s.append("s"+self.figures[i_pl][1]+"_"+self.figures[i_pl][2])
             self.df_guide = self.df_guide.append(pd.DataFrame([s], columns=col_names))
         self.df_guide = self.df_guide.set_index(self.df_guide.columns[0])
         return self.df_guide
@@ -102,11 +103,20 @@ class Generator(object):
         return self.s4p_paths
 
     def get_guides(self):
-        figures = self.figure_string.split(",")
-        for i_f in range(len(figures)):
-            figures[i_f] = tuple(figures[i_f].split("_"))
-        self.figures = figures
-        return figures
+        split_figures = self.figure_string.split(",")
+        self.figures = []
+        for i_f in range(len(split_figures)):
+            parsed = list()
+            parsed.append(split_figures[i_f][-1])
+            split_list = split_figures[i_f].split("_")
+            X = "".join(ch for ch in split_list[0] if ch in "0123456789")
+            Y = "".join(ch for ch in split_list[1] if ch in "0123456789")
+            parsed.append(X)
+            parsed.append(Y)
+            self.figures.append(parsed)
+        print "FIGS++++++++++++"
+        print self.figures
+        return self.figures
 
     def read_info(self):
         file_path = self.info_path + "\\info.csv"
@@ -207,8 +217,10 @@ class Generator(object):
                 if not(pd.isnull(parameter)): # if parameters is not blank
                     labels.append("TS"+str(t))
                     #self.ts_manager.db[0][1][0] ====> DB, TSfile 0, S21
-                    X = int(parameter[1])-1
-                    Y = int(parameter[2])-1
+                    split_list = parameter.split("_")
+                    X = int("".join(ch for ch in split_list[0] if ch in "0123456789"))-1
+                    Y = int("".join(ch for ch in split_list[1] if ch in "0123456789"))-1
+
                     x = np.array(self.ts_manager.ghz[t][X][Y])
                     if magphase == 'm':
                         y = np.array(self.ts_manager.db[t][X][Y])
@@ -302,7 +314,7 @@ def main():
         g.s4p_dir = sys.argv[sys.argv.index('d')+1] \
             if ('d' in sys.argv and sys.argv.index('d') != len(sys.argv)-1) else os.getcwd()
         g.figure_string = sys.argv[sys.argv.index('p')+1] \
-            if ('p' in sys.argv and sys.argv.index('p') != len(sys.argv)-1) else "s11_m,s11_p,s21_m,s21_p"
+            if ('p' in sys.argv and sys.argv.index('p') != len(sys.argv)-1) else "s1_1m,s1_1p,s2_1m,s2_1p"
         print g.figure_string
         g.read_from_paths()
         g.write_from_data()
