@@ -1,12 +1,26 @@
+#!/usr/bin/python
+
+# guide_UI.py
+# Matthew Bird
+# 2/3/2016
+
 from Tkinter import *
 from functools import partial
 import tkFileDialog
 import numpy as np
 import pandas as pd
 
+# DEPENDENCIES:
+#  Download and install Anaconda for Windows Python 2.7 - https://www.continuum.io/downloads#_windows
+
 
 class GUI(object):
+    # A GUI object that uses TKinter to ask a user for relevant information to generate a guide.csv file
     def __init__(self):
+        '''
+        Declaration of internal variables, including widgets to be used for each window
+        :return:
+        '''
         self.root = Tk()
         self.root_labels = []
         self.root_entries = []
@@ -31,6 +45,10 @@ class GUI(object):
         self.plot_ts_choices = []
 
     def root_window(self):
+        '''
+        This is the first window to appear, and asks users for how many plots and touchstone files
+        :return:
+        '''
         self.root_labels.append(Label(self.root, text="How many touchstone files? ").grid(row=1, column=1, sticky=E))
         self.root_entries.append(Entry(self.root, textvariable=self.sNp_count, width=3).grid(row=1, column=2, sticky=W))
         self.root_labels.append(Label(self.root, text="How many plots? ").grid(row=2, column=1, sticky=E))
@@ -42,6 +60,10 @@ class GUI(object):
         mainloop()
 
     def window2_window(self):
+        '''
+        This is the second window asking use to pick out touchstone files
+        :return:
+        '''
         self.window2 = Toplevel()
         self.window2.lift()
 
@@ -65,6 +87,10 @@ class GUI(object):
                                            command=self.window3_window).grid(row=int(self.sNp_count.get())+1, column=4))
 
     def window3_window(self):
+        '''
+        This is the third window asking for Plot options
+        :return:
+        '''
         self.window3 = Toplevel()
         self.window3.lift()
         Label(self.window3, text="Plot Options").grid(row=0, column=0)
@@ -95,13 +121,26 @@ class GUI(object):
         self.window3.lift()
 
     def askopenfile(self, ts_number):
+        '''
+        This is the dialogue box that helps the user to navigate to sNp files
+        :param ts_number:
+        :return:
+        '''
         self.window2_path_vars[ts_number].set(str(tkFileDialog.askopenfilename()))
         self.window2.lift()
 
     def close_gui(self):
+        '''
+        Destroys the GUI
+        :return:
+        '''
         self.root.destroy()
 
     def generate_guide(self):
+        '''
+        Creates a guide.csv file from the information gathered in the GUI
+        :return:
+        '''
         print "thing[plot][touchstone]"
         print "sNp count =", self.sNp_count.get()
         print "plot_count =", self.plot_count.get()
@@ -136,9 +175,14 @@ class GUI(object):
         table.to_csv('guide.csv', sep=',')
 
     def run(self):
+        '''
+        Launches the GUI and then generates guide.csv from it
+        :return:
+        '''
         self.root_window()
         self.generate_guide()
 
 if __name__ == "__main__":
+    #  If this program is being invoked as main (as opposed to imported) it will create a GUI and run it
     g = GUI()
     g.run()

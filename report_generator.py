@@ -2,7 +2,7 @@
 
 # report_generator.py
 # Matthew Bird
-# 1/26/2016
+# 2/3/2016
 
 import matplotlib
 matplotlib.use('Agg')
@@ -15,14 +15,32 @@ import pandas as pd
 import docxtpl
 import glob
 import numpy as np
+import seaborn as sns
+sns.set_style("darkgrid")
 
+# DEPENDENCIES:
+#  Download and install Anaconda for Windows Python 2.7 - https://www.continuum.io/downloads#_windows
+#  Download and install Matlab 2014b or later - https://www.mathworks.com/index.html?s_tid=gn_loc_drop
+#   *After Matlab is installed, install MATLAB Engine for Python:
+#    cd "matlabroot\extern\engines\python"
+#    python setup.py install
+#  Download and install docxtpl 0.1.9 or later - https://pypi.python.org/pypi/docxtpl/0.1.9
+#   *this can typically be done by running cmd.exe as administrator and entering this command into the prompt:
+#    C:\>pip install docxtpl
 
+# USAGE:
+#  Example:
+#  C:\>python report_generator.py
 
 
 class Generator(object):
     # Generator Class - This object combines to interact with several files:
     # (info.csv, template.docx, guide.csv, and many .sNp files)
     def __init__(self):
+        '''
+        declaration of important variables which house relevant data
+        :return:
+        '''
         self.template_path = None
         self.guide_path = None
         self.info_path = None
@@ -44,12 +62,20 @@ class Generator(object):
         self.step_frequency = None
 
     def read_from_paths(self):
+        '''
+        Reads various files into internal structure
+        :return:
+        '''
         self.read_guide()
         self.read_template()
         self.read_info()
         self.read_sNps()
 
     def read_template(self):
+        '''
+        Grabs template.docx and pulls it into memory
+        :return:
+        '''
         file_path = self.template_path + "\\template.docx"
         if os.path.isfile(file_path):
             print "template.docx found at", file_path
@@ -58,6 +84,10 @@ class Generator(object):
             print "template.docx not found"
 
     def read_guide(self):
+        '''
+        Reads in the guide.csv file found, if none is found, generates one
+        :return:
+        '''
         if self.guide_path:
             file_path = str(self.guide_path) + "\\guide.csv"
             if os.path.isfile(file_path):
@@ -73,12 +103,16 @@ class Generator(object):
                 self.set_ts_port_maps()
 
     def generate_guide(self):
+        '''
+        generates a guide.csv file from internal structure
+        :return:
+        '''
         self.get_sNp_paths()
-        figures = self.get_guides()
+        figures = self.go_figure()
         col_names = ['', 'title', 'magphase']
         for i_p in range(len(self.sNp_paths)):
             col_names.append('sNp_'+str(i_p))
-        self.df_guide = pd.DataFrame(columns=col_names) #put in column names
+        self.df_guide = pd.DataFrame(columns=col_names)  # put in column names
         s = ['paths', '', '']
         for p in self.sNp_paths:
             s.append(p)
@@ -98,6 +132,10 @@ class Generator(object):
         return self.df_guide
 
     def get_sNp_paths(self):
+        '''
+        combs the sNp directory for sNp files and pulls them in
+        :return:
+        '''
         if os.path.isfile(self.info_path + "\\guide.csv"):
             self.sNp_paths = self.df_guide.iloc[0, 3:].values.tolist()
             print self.df_guide.iloc[0, 3:].values.tolist()
@@ -105,7 +143,11 @@ class Generator(object):
             self.sNp_paths = glob.glob(self.sNp_dir+"/*.s*p")
         return self.sNp_paths
 
-    def get_guides(self):
+    def go_figure(self):
+        '''
+        Parses the list of strings that make up plot s-parameter instructions
+        :return:
+        '''
         split_figures = self.figure_string.split(",")
         self.figures = []
         for i_f in range(len(split_figures)):
@@ -125,6 +167,10 @@ class Generator(object):
         return self.figures
 
     def read_info(self):
+        '''
+        Reads in the info.csv file from the designated directory
+        :return:
+        '''
         file_path = self.info_path + "\\info.csv"
         if os.path.isfile(file_path):
             print "info.csv found at", file_path
@@ -138,11 +184,8 @@ class Generator(object):
 
     def set_ts_port_maps(self):
         '''
-        using self.df_guide,
-        make a list of binary port maps
-        example:[0, 1, 1, 0, 1]
-
-        where 0 = 13_24 and 1 = 12_13
+        sets the internal port maps (self.ts_port_maps) to be 0 or 1 based on internal structure
+        :return:
         '''
         self.ts_port_maps = self.df_guide.iloc[1, 3:]
         for p in range(len(self.ts_port_maps)):
@@ -155,11 +198,19 @@ class Generator(object):
         print "portmaps:",str(np.array(self.ts_port_maps))
 
     def read_sNps(self):
+        '''
+        creates a local TouchStone manager initialized with the sNp files designated
+        :return:
+        '''
         self.sNp_paths = self.get_sNp_paths()
         self.set_ts_port_maps()
         self.ts_manager = TouchstoneManager(self.sNp_paths, self.ts_port_maps)
 
     def write_from_data(self):
+        '''
+        Fills in the template and generates an output document with data from internal structure
+        :return:
+        '''
         self.gen_plots()
         if not(self.tpl):
             self.tpl = docxtpl.DocxTemplate()
@@ -218,10 +269,18 @@ class Generator(object):
         self.tpl.save("generated_doc.docx")
 
     def count_plots(self):
+        '''
+        simple counts the number of plots from the internal structure
+        :return:
+        '''
         print "# of plots is:", str(len(self.df_guide.index)-2)
         return len(self.df_guide.index)-2
 
     def gen_plots(self):
+        '''
+        Fires up matlab, performs s2sdd transform, and creates images for each plot
+        :return:
+        '''
         plot_count = self.count_plots()
         sNp_count = len(self.sNp_paths)
         for p in range(plot_count):
@@ -269,13 +328,19 @@ class Generator(object):
 
 
 class TouchstoneManager(object):
-    ''' TouchstoneManager
-      Access like this:
-       tsm = TouchstronManager(["Filepath1","Filepath2",...], port_maps)
+    #  A housing place for touchstone data
+    #  Access like this:
+    #  tsm = TouchstronManager(["Filepath1","Filepath2",...], port_maps)
+    #
+    #  self.ts_manager.db[0][1][0] ====> DB, TSfile 0, S21
 
-    self.ts_manager.db[0][1][0] ====> DB, TSfile 0, S21
-    '''
     def __init__(self, ts_paths, port_maps):
+        '''
+        Declaration of important variables to read touchstone data into for plotting
+        :param ts_paths:
+        :param port_maps:
+        :return:
+        '''
         self.pm = port_maps
         self.db, self.deg, self.ghz = [], [], []
         self.eng = matlab.engine.start_matlab()
@@ -315,8 +380,10 @@ class TouchstoneManager(object):
 
     def earliest_difference(self, list_of_strings, reverse = False):
         '''
+        Helper function that takes a list of strings and finds the first point they dont have in common
         :param list_of_strings:
-        :return index: earliest point where strings are not the same
+        :param reverse:
+        :return:
         '''
         min_length = len(min(list_of_strings, key=len))
         for i in range(min_length):
@@ -333,6 +400,11 @@ class TouchstoneManager(object):
                         return -i
 
     def get_sNp_titles(self, string_list):
+        '''
+        creates a list of distinct titles for each sNp file
+        :param string_list:
+        :return:
+        '''
         first = self.earliest_difference(string_list, reverse=False)
         last = self.earliest_difference(string_list, reverse=True)
         names = [x[first:last] for x in string_list]
@@ -340,23 +412,28 @@ class TouchstoneManager(object):
 
 
 def main():
+    '''
+    The main function that is called them the program is invoked as main
+    :return:
+    '''
     g = Generator()
     if 'help' in sys.argv:
         print
         print "All parameters are optional, but the default path right now is", os.getcwd()
         print
-        print "A short list of available commands:"
-        print "  i, info.csv filepath"
-        print "  t, template.docx filepath"
-        print "  g, guide.csv filepath"
+        print "A short list of available commands (do not include filename in paths):"
+        print "  i, info.csv path"
+        print "  t, template.docx path"
+        print "  g, guide.csv path"
         print "  d, directory with .sNp files"
-        print "  p, figures to plot ie: 'f S1_1m,S1_2p,S2_2m'"
+        print "  p, plots to generate, ie: 'python report_generator.py p S1_1m,S1_2p,S2_2m'"
         print "     m is for magnitude, p is for phase"
         print
         print "USAGE EXAMPLE:"
         print "  C:\>python report_generator.py i c:\path\\to\info t c:\path\\to\\template"
         print
     else:
+        #  Setting paths for input files from command line or uses defaults if no command is present
         g.info_path = sys.argv[sys.argv.index('i')+1] \
             if ('i' in sys.argv and sys.argv.index('i') != len(sys.argv)-1) else os.getcwd()
         g.template_path = sys.argv[sys.argv.index('t')+1] \
@@ -366,7 +443,7 @@ def main():
         g.sNp_dir = sys.argv[sys.argv.index('d')+1] \
             if ('d' in sys.argv and sys.argv.index('d') != len(sys.argv)-1) else os.getcwd()
         g.figure_string = sys.argv[sys.argv.index('p')+1] \
-            if ('p' in sys.argv and sys.argv.index('p') != len(sys.argv)-1) else "s1_1m,s1_1p,s2_1m,s2_1p"
+            if ('p' in sys.argv and sys.argv.index('p') != len(sys.argv)-1) else "s1_1m,s2_2m,s1_2m,s2_1m"
         print g.figure_string
         g.read_from_paths()
         g.write_from_data()
