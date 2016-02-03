@@ -17,7 +17,7 @@ from docx.enum.style import WD_STYLE_TYPE
 import seaborn as sns
 from scipy import signal
 
-import skrf as rf #<--- this would be nice but plotting does not work
+#import skrf as rf #<--- this would be nice but plotting does not work
 
 
 class GUI(object):
@@ -129,7 +129,6 @@ class GUI(object):
             self.ts_transforms.append(IntVar())
             Radiobutton(self.window2, text="1,3 to 2,4", value=0, variable=self.ts_port_maps[i]).grid(row=i+1, column=3)
             Radiobutton(self.window2, text="1,2 to 3,4", value=1, variable=self.ts_port_maps[i]).grid(row=i+1, column=4)
-            #Checkbutton(self.window2, variable=self.ts_transforms[i]).grid(row=i+1, column=5)
         Button(self.window2, text='Ok', command=self.third_window).grid(row=int(self.ts_count_var.get())+1, column=4)
         self.window2.lift()
 

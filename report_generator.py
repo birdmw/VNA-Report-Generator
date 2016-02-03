@@ -4,6 +4,10 @@
 # Matthew Bird
 # 1/26/2016
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from docx.shared import Inches
 import matlab.engine
 import sys
 import os
@@ -11,15 +15,13 @@ import pandas as pd
 import docxtpl
 import glob
 import numpy as np
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-from docx.shared import Inches
+
+
 
 
 class Generator(object):
-    '''Generator Class - This object combines several files (info.csv, template.docx, guide.csv, and many .sNp files)'''
-
+    # Generator Class - This object combines to interact with several files:
+    # (info.csv, template.docx, guide.csv, and many .sNp files)
     def __init__(self):
         self.template_path = None
         self.guide_path = None
@@ -90,7 +92,6 @@ class Generator(object):
         for i_pl in range(len(figures)):
             s = ["plot_"+str(i_pl), "plot_"+str(i_pl), self.figures[i_pl][0]]
             for _ in self.sNp_paths:
-                #print self.figures[i_pl]
                 s.append("s"+self.figures[i_pl][1]+"_"+self.figures[i_pl][2])
             self.df_guide = self.df_guide.append(pd.DataFrame([s], columns=col_names))
         self.df_guide = self.df_guide.set_index(self.df_guide.columns[0])
@@ -98,8 +99,8 @@ class Generator(object):
 
     def get_sNp_paths(self):
         if os.path.isfile(self.info_path + "\\guide.csv"):
-            self.sNp_paths = self.df_guide.iloc[0,3:].values.tolist()
-            print self.df_guide.iloc[0,3:].values.tolist()
+            self.sNp_paths = self.df_guide.iloc[0, 3:].values.tolist()
+            print self.df_guide.iloc[0, 3:].values.tolist()
         else:
             self.sNp_paths = glob.glob(self.sNp_dir+"/*.s*p")
         return self.sNp_paths
@@ -110,13 +111,16 @@ class Generator(object):
         for i_f in range(len(split_figures)):
             parsed = list()
             parsed.append(split_figures[i_f][-1])
-            split_list = split_figures[i_f].split("_")
-            X = "".join(ch for ch in split_list[0] if ch in "0123456789")
-            Y = "".join(ch for ch in split_list[1] if ch in "0123456789")
-            parsed.append(X)
-            parsed.append(Y)
+            if len(split_figures[i_f]) == 3:
+                sx = split_figures[i_f][1]
+                sy = split_figures[i_f][2]
+            else:
+                split_list = split_figures[i_f].split("_")
+                sx = "".join(ch for ch in split_list[0] if ch in "0123456789")
+                sy = "".join(ch for ch in split_list[1] if ch in "0123456789")
+            parsed.append(sx)
+            parsed.append(sy)
             self.figures.append(parsed)
-        print "FIGS++++++++++++"
         print self.figures
         return self.figures
 
@@ -125,7 +129,7 @@ class Generator(object):
         if os.path.isfile(file_path):
             print "info.csv found at", file_path
             self.df_info = pd.read_csv(file_path)
-            self.d_info = self.df_info.set_index('key').iloc[:,:1].T.to_dict('list')
+            self.d_info = self.df_info.set_index('key').iloc[:, :1].T.to_dict('list')
             for k in self.d_info.iterkeys():
                 self.d_info[k] = self.d_info[k][0]
             print self.d_info
@@ -140,13 +144,15 @@ class Generator(object):
 
         where 0 = 13_24 and 1 = 12_13
         '''
-        self.ts_port_maps = self.df_guide.iloc[1,3:]
+        self.ts_port_maps = self.df_guide.iloc[1, 3:]
         for p in range(len(self.ts_port_maps)):
-            print "pm:", self.ts_port_maps[p]
-            if self.ts_port_maps[p] == "13_24":
+            if any(self.ts_port_maps[p] == port for port in ["13_24", 0, "0"]):
                 self.ts_port_maps[p] = 0
-            else:
+            elif any(self.ts_port_maps[p] == port for port in ["12_34", 1, "1"]):
                 self.ts_port_maps[p] = 1
+            else:
+                self.ts_port_maps[p] = 2
+        print "portmaps:",str(np.array(self.ts_port_maps))
 
     def read_sNps(self):
         self.sNp_paths = self.get_sNp_paths()
@@ -227,11 +233,15 @@ class Generator(object):
                 parameter = self.df_guide['sNp_'+str(t)].loc[2+p]
                 magphase = self.df_guide['magphase'].loc[2+p]
                 title = self.df_guide['title'].loc[2+p]
-                if not(pd.isnull(parameter)): # if parameters is not blank
+                if not(pd.isnull(parameter)):
                     # self.ts_manager.db[0][1][0] ====> DB, TSfile 0, S21
-                    split_list = parameter.split("_")
-                    X = int("".join(ch for ch in split_list[0] if ch in "0123456789"))-1
-                    Y = int("".join(ch for ch in split_list[1] if ch in "0123456789"))-1
+                    if len(parameter) == 3:
+                        X = int(parameter[1])-1
+                        Y = int(parameter[2])-1
+                    else:
+                        split_list = parameter.split("_")
+                        X = int("".join(ch for ch in split_list[0] if ch in "0123456789"))-1
+                        Y = int("".join(ch for ch in split_list[1] if ch in "0123456789"))-1
                     XY_list.append([X, Y])
                     labels.append("TS"+str(t)+" S"+str(X+1)+str(Y+1))
                     x = np.array(self.ts_manager.ghz[t][X][Y])
