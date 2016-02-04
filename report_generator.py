@@ -63,7 +63,7 @@ class Generator(object):
 
     def read_from_paths(self):
         '''
-        Reads various files into internal structure
+        This is the "read" routine. This calls subroutines responsible for pulling in data from user genrated files
         :return:
         '''
         self.read_guide()
