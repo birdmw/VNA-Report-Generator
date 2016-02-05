@@ -1,5 +1,4 @@
 #!/usr/bin/python
-
 # report_generator.py
 # Matthew Bird
 # If you are troubleshooting a bug please email me at birdmw@gmail.com and I will deploy a patch.
