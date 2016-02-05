@@ -1,8 +1,0 @@
-add switch for output path, if blank same as data is fine
-name output file arbitrarily (include in path)
-10 meg start freq? reinvestigate
-comment in code
-prepare installation documentation
-Add GUI
-is s2sdd multiport or just 4 to 2? Generalize code around this.
-Beautify plots and tables

@@ -2,6 +2,7 @@
 
 # report_generator.py
 # Matthew Bird
+# If you are troubleshooting a bug please email me at birdmw@gmail.com and I will deploy a patch.
 # 2/3/2016
 
 import matplotlib
@@ -27,7 +28,10 @@ sns.set_style("darkgrid")
 #  Download and install docxtpl 0.1.9 or later - https://pypi.python.org/pypi/docxtpl/0.1.9
 #   *this can typically be done by running cmd.exe as administrator and entering this command into the prompt:
 #    C:\>pip install docxtpl
-
+#  You should have python-docx from Anaconda, but in case you don't:
+#    C:\>pip install python-docx
+#  You also need MS Word 2010 or later
+#
 # USAGE:
 #  Example:
 #  C:\>python report_generator.py
@@ -44,6 +48,7 @@ class Generator(object):
         self.template_path = None
         self.guide_path = None
         self.info_path = None
+        self.output_path=None
         self.sNp_dir = None
         self.figure_string = None
         self.figures = None
@@ -98,7 +103,7 @@ class Generator(object):
                 print "guide.csv not found, generating one instead"
 
                 self.generate_guide()
-                self.df_guide.to_csv('guide.csv')
+                self.df_guide.to_csv(self.guide_path+"\\guide.csv")
                 self.df_guide = pd.read_csv(file_path)
                 self.set_ts_port_maps()
 
@@ -136,7 +141,7 @@ class Generator(object):
         combs the sNp directory for sNp files and pulls them in
         :return:
         '''
-        if os.path.isfile(self.info_path + "\\guide.csv"):
+        if os.path.isfile(self.guide_path + "\\guide.csv"):
             self.sNp_paths = self.df_guide.iloc[0, 3:].values.tolist()
             print self.df_guide.iloc[0, 3:].values.tolist()
         else:
@@ -256,7 +261,7 @@ class Generator(object):
                 table3.cell(row+1, 0).text = self.ts_manager.file_titles[row]
 
             for i in range(self.count_plots()):
-                sd4.add_picture('img'+str(i)+'.png', width=Inches(6.5))
+                sd4.add_picture('images\\img'+str(i)+'.png', width=Inches(6.5))
 
             self.d_info['DUTIdentification'] = sd1
             self.d_info['PortConfiguration'] = sd2
@@ -266,7 +271,12 @@ class Generator(object):
             self.tpl.render(self.d_info)
             print "rendered"
 
-        self.tpl.save("generated_doc.docx")
+        if os.path.isdir(self.output_path):
+            self.tpl.save(self.output_path+"/generated_report.docx")
+        elif os.path.isdir('\\'.join(self.output_path.split('\\')[0:-1])):
+            self.tpl.save(self.output_path)
+        else:
+            self.tpl.save("generated_doc.docx")
 
     def count_plots(self):
         '''
@@ -291,26 +301,28 @@ class Generator(object):
             for t in range(sNp_count):
                 parameter = self.df_guide['sNp_'+str(t)].loc[2+p]
                 magphase = self.df_guide['magphase'].loc[2+p]
-                title = self.df_guide['title'].loc[2+p]
+                #  title = self.df_guide['title'].loc[2+p]
                 if not(pd.isnull(parameter)):
                     # self.ts_manager.db[0][1][0] ====> DB, TSfile 0, S21
-                    if len(parameter) == 3:
-                        X = int(parameter[1])-1
-                        Y = int(parameter[2])-1
-                    else:
-                        split_list = parameter.split("_")
-                        X = int("".join(ch for ch in split_list[0] if ch in "0123456789"))-1
-                        Y = int("".join(ch for ch in split_list[1] if ch in "0123456789"))-1
-                    XY_list.append([X, Y])
-                    labels.append("TS"+str(t)+" S"+str(X+1)+str(Y+1))
-                    x = np.array(self.ts_manager.ghz[t][X][Y])
-                    if magphase == 'm':
-                        y = np.array(self.ts_manager.db[t][X][Y])
-                        plt.ylabel('Magnitude (dB)')
-                    else:
-                        y = np.array(self.ts_manager.deg[t][X][Y])
-                        plt.ylabel('Phase (deg)')
-                    y_arr.append(y)
+                    split_peas = parameter.split(',')
+                    for pea in split_peas:
+                        if len(pea) == 3:
+                            X = int(parameter[1])-1
+                            Y = int(parameter[2])-1
+                        else:
+                            split_list = pea.split("_")
+                            X = int("".join(ch for ch in split_list[0] if ch in "0123456789"))-1
+                            Y = int("".join(ch for ch in split_list[1] if ch in "0123456789"))-1
+                        XY_list.append([X, Y])
+                        labels.append("TS"+str(t)+" S"+str(X+1)+str(Y+1))
+                        x = np.array(self.ts_manager.ghz[t][X][Y])
+                        if magphase == 'm':
+                            y = np.array(self.ts_manager.db[t][X][Y])
+                            plt.ylabel('Magnitude (dB)')
+                        else:
+                            y = np.array(self.ts_manager.deg[t][X][Y])
+                            plt.ylabel('Phase (deg)')
+                        y_arr.append(y)
             plots_arr = []
             if all(XY == XY_list[0] for XY in XY_list):
                 plt.title('S'+str(X+1)+str(Y+1))
@@ -323,7 +335,7 @@ class Generator(object):
             self.start_frequency = x[1]
             self.step_frequency = (self.stop_frequency - self.start_frequency)/float(len(x))
             plt.legend(loc='lower right')
-            plt.savefig("img"+str(p))
+            plt.savefig("images\\img"+str(p))
             self.plots.append(plt)
 
 
@@ -351,6 +363,10 @@ class TouchstoneManager(object):
             ghzX_params = []
             filename = str(ts_paths[ts_p])
             print "file =", filename
+            print "ts_p =", ts_p
+            print "len(ts_paths)", len(ts_paths)
+            print "len(self.pm)=", len(self.pm)
+            print "str(self.pm[ts_p]+1) =", str(self.pm[ts_p]+1)
             self.eng.eval("touchstone_filename = '"+filename+"';", nargout=0)
             self.eng.eval("s_obj = sparameters(touchstone_filename);", nargout=0)
             self.eng.eval("ghz = s_obj.Frequencies./1e9;", nargout=0)
@@ -378,7 +394,7 @@ class TouchstoneManager(object):
         self.eng.quit()
         self.file_titles = self.get_sNp_titles(ts_paths)
 
-    def earliest_difference(self, list_of_strings, reverse = False):
+    def earliest_difference(self, list_of_strings, reverse=False):
         '''
         Helper function that takes a list of strings and finds the first point they dont have in common
         :param list_of_strings:
@@ -425,7 +441,8 @@ def main():
         print "  i, info.csv path"
         print "  t, template.docx path"
         print "  g, guide.csv path"
-        print "  d, directory with .sNp files"
+        print "  o, output path"
+        print "  s, sNp files path"
         print "  p, plots to generate, ie: 'python report_generator.py p S1_1m,S1_2p,S2_2m'"
         print "     m is for magnitude, p is for phase"
         print
@@ -435,15 +452,17 @@ def main():
     else:
         #  Setting paths for input files from command line or uses defaults if no command is present
         g.info_path = sys.argv[sys.argv.index('i')+1] \
-            if ('i' in sys.argv and sys.argv.index('i') != len(sys.argv)-1) else os.getcwd()
+            if ('i' in sys.argv and sys.argv.index('i') != len(sys.argv)-1) else os.getcwd()+"\\info"
+        g.output_path = sys.argv[sys.argv.index('o')+1] \
+            if ('o' in sys.argv and sys.argv.index('o') != len(sys.argv)-1) else os.getcwd()
         g.template_path = sys.argv[sys.argv.index('t')+1] \
-            if ('t' in sys.argv and sys.argv.index('t') != len(sys.argv)-1) else os.getcwd()
+            if ('t' in sys.argv and sys.argv.index('t') != len(sys.argv)-1) else os.getcwd()+"\\template"
         g.guide_path = sys.argv[sys.argv.index('g')+1] \
-            if ('g' in sys.argv and sys.argv.index('g') != len(sys.argv)-1) else os.getcwd()
-        g.sNp_dir = sys.argv[sys.argv.index('d')+1] \
-            if ('d' in sys.argv and sys.argv.index('d') != len(sys.argv)-1) else os.getcwd()
+            if ('g' in sys.argv and sys.argv.index('g') != len(sys.argv)-1) else os.getcwd()+"\\guide"
+        g.sNp_dir = sys.argv[sys.argv.index('s')+1] \
+            if ('s' in sys.argv and sys.argv.index('s') != len(sys.argv)-1) else os.getcwd()+"\\sNp"
         g.figure_string = sys.argv[sys.argv.index('p')+1] \
-            if ('p' in sys.argv and sys.argv.index('p') != len(sys.argv)-1) else "s1_1m,s2_2m,s1_2m,s2_1m"
+            if ('p' in sys.argv and sys.argv.index('p') != len(sys.argv)-1) else "s1_1m,s1_2m,s2_1m,s2_2m"
         print g.figure_string
         g.read_from_paths()
         g.write_from_data()

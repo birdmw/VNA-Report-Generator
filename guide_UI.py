@@ -2,6 +2,7 @@
 
 # guide_UI.py
 # Matthew Bird
+# If you are troubleshooting a bug please email me at birdmw@gmail.com and I will deploy a patch.
 # 2/3/2016
 
 from Tkinter import *
@@ -172,7 +173,7 @@ class GUI(object):
             print row
         table = pd.DataFrame(np_guide[1:, 1:], index=np_guide[1:, 0], columns=np_guide[0, 1:])
         print table
-        table.to_csv('guide.csv', sep=',')
+        table.to_csv('guide\\guide.csv', sep=',')
 
     def run(self):
         '''

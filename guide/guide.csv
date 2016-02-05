@@ -1,0 +1,8 @@
+,title,magphase,sNp_0,sNp_1,sNp_2,sNp_3
+paths,,,C:/ms/sNp/SI-489-2_SURFACE_PCIE0_LANE2_C2_P2-3_Sdd1-1.s4p,C:/ms/sNp/SI-489-3_SURFACE_PCIE0_LANE3_C3_P2_Sdd2-2.s4p,C:/ms/sNp/SI-489-4_SURFACE_PCIE0_LANE4_C3_P1_Sdd2-2.s4p,C:/ms/sNp/SI-489-5_SURFACE_PCIE0_LANE5_C5_P4_Sdd1-2.s4p
+portmap,,,13_24,13_24,13_24,13_24
+plot_0,plot_0,m,s11,s11,s11,s11
+plot_1,plot_1,m,s22,s22,s22,s22
+plot_2,plot_2,m,s12,s12,s12,s12
+plot_3,plot_3,m,s21,s21,s21,s21
+plot_4,plot_4,p,s21,s21,s21,s21
