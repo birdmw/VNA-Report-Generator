@@ -143,7 +143,6 @@ class Generator(object):
         '''
         if os.path.isfile(self.guide_path + "\\guide.csv"):
             self.sNp_paths = self.df_guide.iloc[0, 3:].values.tolist()
-            print self.df_guide.iloc[0, 3:].values.tolist()
         else:
             self.sNp_paths = glob.glob(self.sNp_dir+"/*.s*p")
         return self.sNp_paths
@@ -168,7 +167,7 @@ class Generator(object):
             parsed.append(sx)
             parsed.append(sy)
             self.figures.append(parsed)
-        print self.figures
+        #print self.figures
         return self.figures
 
     def read_info(self):
@@ -183,7 +182,7 @@ class Generator(object):
             self.d_info = self.df_info.set_index('key').iloc[:, :1].T.to_dict('list')
             for k in self.d_info.iterkeys():
                 self.d_info[k] = self.d_info[k][0]
-            print self.d_info
+            #print self.d_info
         else:
             print "info.csv not found"
 
@@ -200,7 +199,7 @@ class Generator(object):
                 self.ts_port_maps[p] = 1
             else:
                 self.ts_port_maps[p] = 2
-        print "portmaps:",str(np.array(self.ts_port_maps))
+        #print "portmaps:",str(np.array(self.ts_port_maps))
 
     def read_sNps(self):
         '''
@@ -220,7 +219,7 @@ class Generator(object):
         if not(self.tpl):
             self.tpl = docxtpl.DocxTemplate()
         else:
-            self.d_info['StartFrequency'] = str(round(self.start_frequency*1000))+"MHz"
+            self.d_info['StartFrequency'] = str(round(self.start_frequency*1000)-round(self.step_frequency*1000))+"MHz"
             self.d_info['StopFrequency'] = str(round(self.stop_frequency))+"GHz"
             self.d_info['StepFrequency'] = str(round(self.step_frequency*1000))+"MHz"
 
@@ -283,7 +282,7 @@ class Generator(object):
         simple counts the number of plots from the internal structure
         :return:
         '''
-        print "# of plots is:", str(len(self.df_guide.index)-2)
+        #print "# of plots is:", str(len(self.df_guide.index)-2)
         return len(self.df_guide.index)-2
 
     def gen_plots(self):
@@ -363,10 +362,6 @@ class TouchstoneManager(object):
             ghzX_params = []
             filename = str(ts_paths[ts_p])
             print "file =", filename
-            print "ts_p =", ts_p
-            print "len(ts_paths)", len(ts_paths)
-            print "len(self.pm)=", len(self.pm)
-            print "str(self.pm[ts_p]+1) =", str(self.pm[ts_p]+1)
             self.eng.eval("touchstone_filename = '"+filename+"';", nargout=0)
             self.eng.eval("s_obj = sparameters(touchstone_filename);", nargout=0)
             self.eng.eval("ghz = s_obj.Frequencies./1e9;", nargout=0)
@@ -463,7 +458,7 @@ def main():
             if ('s' in sys.argv and sys.argv.index('s') != len(sys.argv)-1) else os.getcwd()+"\\sNp"
         g.figure_string = sys.argv[sys.argv.index('p')+1] \
             if ('p' in sys.argv and sys.argv.index('p') != len(sys.argv)-1) else "s1_1m,s1_2m,s2_1m,s2_2m"
-        print g.figure_string
+        #print g.figure_string
         g.read_from_paths()
         g.write_from_data()
 
