@@ -1,0 +1,3 @@
+This folder is auto-populated with images to go into the final report.
+
+There should be no reason to go into this folder unless you just want the raw images.
