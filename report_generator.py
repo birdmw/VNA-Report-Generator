@@ -219,7 +219,7 @@ class Generator(object):
         if not(self.tpl):
             self.tpl = docxtpl.DocxTemplate()
         else:
-            self.d_info['StartFrequency'] = str(round(self.start_frequency*1000)-round(self.step_frequency*1000))+"MHz"
+            self.d_info['StartFrequency'] = str(round(self.start_frequency*1000))+"MHz"
             self.d_info['StopFrequency'] = str(round(self.stop_frequency))+"GHz"
             self.d_info['StepFrequency'] = str(round(self.step_frequency*1000))+"MHz"
 
@@ -331,7 +331,7 @@ class Generator(object):
             for ya in range(len(y_arr)):
                 plots_arr.append(plt.plot(x, y_arr[ya], label=labels[ya]))
             self.stop_frequency = x[-1]
-            self.start_frequency = x[1]
+            self.start_frequency = x[0]
             self.step_frequency = (self.stop_frequency - self.start_frequency)/float(len(x))
             plt.legend(loc='lower right')
             plt.savefig("images\\img"+str(p))
