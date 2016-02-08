@@ -52,6 +52,7 @@ class Generator(object):
         self.sNp_dir = None
         self.figure_string = None
         self.figures = None
+        self.guide_filepath = None
 
         self.df_info = pd.DataFrame()
         self.d_info = {}
@@ -93,19 +94,31 @@ class Generator(object):
         Reads in the guide.csv file found, if none is found, generates one
         :return:
         '''
+
         if self.guide_path:
-            file_path = str(self.guide_path) + "\\guide.csv"
-            if os.path.isfile(file_path):
-                print "guide.csv found at", file_path
+            if os.path.isfile(str(self.guide_path)):
+                file_path = str(self.guide_path)
+                print "guide found at", file_path
+                self.df_guide = pd.read_csv(file_path)
+                self.set_ts_port_maps()
+            elif os.path.isfile(os.getcwd()+"\\guide\\"+self.guide_path):
+                file_path = os.getcwd()+"\\guide\\"+self.guide_path
+                print "guide found at", file_path
+                self.df_guide = pd.read_csv(file_path)
+                self.set_ts_port_maps()
+            elif os.path.isfile(os.getcwd()+"\\"+self.guide_path):
+                file_path = os.getcwd()+"\\"+self.guide_path
+                print "guide found at", file_path
                 self.df_guide = pd.read_csv(file_path)
                 self.set_ts_port_maps()
             else:
                 print "guide.csv not found, generating one instead"
-
                 self.generate_guide()
                 self.df_guide.to_csv(self.guide_path+"\\guide.csv")
+                file_path = str(self.guide_path) + "\\guide.csv"
                 self.df_guide = pd.read_csv(file_path)
                 self.set_ts_port_maps()
+        self.guide_filepath = file_path
 
     def generate_guide(self):
         '''
@@ -141,7 +154,7 @@ class Generator(object):
         combs the sNp directory for sNp files and pulls them in
         :return:
         '''
-        if os.path.isfile(self.guide_path + "\\guide.csv"):
+        if os.path.isfile(self.guide_filepath):
             self.sNp_paths = self.df_guide.iloc[0, 3:].values.tolist()
         else:
             self.sNp_paths = glob.glob(self.sNp_dir+"/*.s*p")
@@ -167,7 +180,7 @@ class Generator(object):
             parsed.append(sx)
             parsed.append(sy)
             self.figures.append(parsed)
-        #print self.figures
+        print self.figures
         return self.figures
 
     def read_info(self):
@@ -252,12 +265,12 @@ class Generator(object):
 
             table3 = sd3.add_table(rows=len(self.sNp_paths)+1, cols=2)
             table3.style = 'TableGrid'
-            table3.cell(0, 1).text = "Trace Name"
             table3.cell(0, 0).text = "sNp file"
+            table3.cell(0, 1).text = "Trace Name"
 
             for row in range(len(self.sNp_paths)):
-                table3.cell(row+1, 1).text = "TS"+str(row)
                 table3.cell(row+1, 0).text = self.ts_manager.file_titles[row]
+                table3.cell(row+1, 1).text = "TS"+str(row)
 
             for i in range(self.count_plots()):
                 sd4.add_picture('images\\img'+str(i)+'.png', width=Inches(6.5))
@@ -275,7 +288,7 @@ class Generator(object):
         elif os.path.isdir('\\'.join(self.output_path.split('\\')[0:-1])):
             self.tpl.save(self.output_path)
         else:
-            self.tpl.save("generated_doc.docx")
+            self.tpl.save(self.output_path)
 
     def count_plots(self):
         '''
@@ -304,6 +317,7 @@ class Generator(object):
                 if not(pd.isnull(parameter)):
                     # self.ts_manager.db[0][1][0] ====> DB, TSfile 0, S21
                     split_peas = parameter.split(',')
+                    print split_peas
                     for pea in split_peas:
                         if len(pea) == 3:
                             X = int(parameter[1])-1
@@ -416,9 +430,9 @@ class TouchstoneManager(object):
         :param string_list:
         :return:
         '''
-        first = self.earliest_difference(string_list, reverse=False)
-        last = self.earliest_difference(string_list, reverse=True)
-        names = [x[first:last] for x in string_list]
+        #first = self.earliest_difference(string_list, reverse=False)
+        #last = self.earliest_difference(string_list, reverse=True)
+        names = ["".join(x.split('\\')[-1]) for x in string_list]
         return names
 
 
@@ -453,7 +467,7 @@ def main():
         g.template_path = sys.argv[sys.argv.index('t')+1] \
             if ('t' in sys.argv and sys.argv.index('t') != len(sys.argv)-1) else os.getcwd()+"\\template"
         g.guide_path = sys.argv[sys.argv.index('g')+1] \
-            if ('g' in sys.argv and sys.argv.index('g') != len(sys.argv)-1) else os.getcwd()+"\\guide"
+            if ('g' in sys.argv and sys.argv.index('g') != len(sys.argv)-1) else os.getcwd()+"\\guide\\guide.csv"
         g.sNp_dir = sys.argv[sys.argv.index('s')+1] \
             if ('s' in sys.argv and sys.argv.index('s') != len(sys.argv)-1) else os.getcwd()+"\\sNp"
         g.figure_string = sys.argv[sys.argv.index('p')+1] \

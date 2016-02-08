@@ -1,7 +1,7 @@
-,title,magphase,sNp_0,sNp_1,sNp_2,sNp_3,sNp_4,sNp_5
-paths,,,C:\Users\Administrator\Documents\VNA-Report-Generator\sNp\SI-489-1_SURFACE_PCIE0_LANE1_C1_P1-2-3_Sdd1-2.s4p,C:\Users\Administrator\Documents\VNA-Report-Generator\sNp\SI-489-2_SURFACE_PCIE0_LANE2_C2_P2-3_Sdd1-1.s4p,C:\Users\Administrator\Documents\VNA-Report-Generator\sNp\SI-489-3_SURFACE_PCIE0_LANE3_C3_P2_Sdd2-2.s4p,C:\Users\Administrator\Documents\VNA-Report-Generator\sNp\SI-489-4_SURFACE_PCIE0_LANE4_C3_P1_Sdd2-2.s4p,C:\Users\Administrator\Documents\VNA-Report-Generator\sNp\SI-489-5_SURFACE_PCIE0_LANE5_C5_P4_Sdd1-2.s4p,C:\Users\Administrator\Documents\VNA-Report-Generator\sNp\SI-489-6_SURFACE_PCIE0_LANE6_C4_P2_Sdd1-4.s4p
-portmap,,,13_24,13_24,13_24,13_24,13_24,13_24
-plot_0,plot_0,m,s1_1,s1_1,s1_1,s1_1,s1_1,s1_1
-plot_1,plot_1,m,s1_2,s1_2,s1_2,s1_2,s1_2,s1_2
-plot_2,plot_2,m,s2_1,s2_1,s2_1,s2_1,s2_1,s2_1
-plot_3,plot_3,m,s2_2,s2_2,s2_2,s2_2,s2_2,s2_2
+,title,magphase,sNp_0,sNp_1,sNp_2,sNp_3,sNp_4,sNp_5,sNp_6
+paths,,,C:\Users\birdmw\Documents\VNA-Report-Generator\sNp\SAMPLE.S4P,C:\Users\birdmw\Documents\VNA-Report-Generator\sNp\SI-489-1_SURFACE_PCIE0_LANE1_C1_P1-2-3_Sdd1-2.s4p,C:\Users\birdmw\Documents\VNA-Report-Generator\sNp\SI-489-2_SURFACE_PCIE0_LANE2_C2_P2-3_Sdd1-1.s4p,C:\Users\birdmw\Documents\VNA-Report-Generator\sNp\SI-489-3_SURFACE_PCIE0_LANE3_C3_P2_Sdd2-2.s4p,C:\Users\birdmw\Documents\VNA-Report-Generator\sNp\SI-489-4_SURFACE_PCIE0_LANE4_C3_P1_Sdd2-2.s4p,C:\Users\birdmw\Documents\VNA-Report-Generator\sNp\SI-489-5_SURFACE_PCIE0_LANE5_C5_P4_Sdd1-2.s4p,C:\Users\birdmw\Documents\VNA-Report-Generator\sNp\SI-489-6_SURFACE_PCIE0_LANE6_C4_P2_Sdd1-4.s4p
+portmap,,,13_24,13_24,13_24,13_24,13_24,13_24,13_24
+plot_0,plot_0,m,s1_1,s1_1,s1_1,s1_1,s1_1,s1_1,s1_1
+plot_1,plot_1,m,s1_2,s1_2,s1_2,s1_2,s1_2,s1_2,s1_2
+plot_2,plot_2,m,s2_1,s2_1,s2_1,s2_1,s2_1,s2_1,s2_1
+plot_3,plot_3,m,s2_2,s2_2,s2_2,s2_2,s2_2,s2_2,s2_2
